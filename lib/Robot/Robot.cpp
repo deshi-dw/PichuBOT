@@ -20,13 +20,19 @@ void Robot::init() {
 // Initializes robot variables and sets the starting state.
 void Robot::ready() {
     state = INIT_IDLE;
+    Serial.println("Robot is now ready.");
 }
 
 // Runs on loop throughout the robots lifetime.
 void Robot::update() {
-    if (isDisabled) return;
+    if (isDisabled == true) {
+        return;
+    }
+    if(isTesting == true) {
+        state = TESTING;
+    }
 
-    time = millis() - timeDifference;
+    time = millis();
 
     // TODO: Get bluetooth input via ControllerReciever.
 
@@ -36,18 +42,8 @@ void Robot::update() {
         motorLeft.setSpeed(speedLeft);
     }
 
-    // Set time difference to time on initialization.
-    // timeDifference acts as resetting the timer to 0 but since that isn't possible we use this.
-    if (state == INIT_AUTONOMOUS || state == INIT_TELEOP) timeDifference = time;
-
-    // If autonomous time has ended, switch to teleop.
-    if (state == LOOP_AUTONOMOUS && time > autonomousTime) state = INIT_TELEOP;
-    // If teleop state has ended, switch to disabled.
-    if (state == LOOP_TELEOP && time > teleopTime) state = DISABLED;
-
     switch (state) {
         case INIT_ROBOT:
-            state = INIT_IDLE;
             break;
         case INIT_IDLE:
             states[INIT_IDLE]();
@@ -59,19 +55,30 @@ void Robot::update() {
         case INIT_AUTONOMOUS:
             states[INIT_AUTONOMOUS]();
             state = LOOP_AUTONOMOUS;
+            elapsedTime = time;
             break;
         case LOOP_AUTONOMOUS:
             states[LOOP_AUTONOMOUS]();
+            if(time - elapsedTime > autonomousTime) {
+                state = INIT_TELEOP;
+            }
             break;
         case INIT_TELEOP:
             states[INIT_TELEOP]();
             state = LOOP_TELEOP;
+            elapsedTime = time;
             break;
         case LOOP_TELEOP:
             states[LOOP_TELEOP]();
+            if(time - elapsedTime > teleopTime) {
+                state = DISABLED;
+            }
             break;
+        case TESTING:
+            states[TESTING]();
+            isFirstTest = false;
         case DISABLED:
-            states[DISABLED]();
+            // states[DISABLED]();
             //TODO: Add shutdown functionality.
             break;
         default:
@@ -81,6 +88,7 @@ void Robot::update() {
 }
 
 // Drive the robot in arcade mode. This means x acts as rotation and y acts as speed.
+// TODO: Change int to byte as 255 is the max value;
 void Robot::drive(int x, int y) {
     if (stopped) stopped = false;
 
@@ -95,17 +103,10 @@ void Robot::drive(int x, int y) {
 }
 
 // Drive the robot in tank mode. right is right motor speed and left is left motor speed.
+// TODO: Change int to byte as 255 is the max value;
 void Robot::driveTank(int right, int left) {
     if (stopped) stopped = false;
 
     speedRight = right;
     speedLeft = left;
-}
-
-// Pause the robot. This will only update the robot and should freeze everything else.
-void Robot::pause(unsigned long pause) {
-    unsigned long pauseTime = time + pause;
-    while (pauseTime > time) {
-        update();
-    }
 }

@@ -20,23 +20,23 @@ class Robot {
     void driveTank(int right, int left);
     void stop();
 
-	void pause(unsigned long time);
-
     Motor motorRight = Motor(0, 0, 0);
     Motor motorLeft = Motor(0, 0, 0);
 
     RobotState state;
-	void (*states[])();
+	void (*states[9])();
 
     float rotationBias = 1.0f;
     float speedBias = 1.0f;
 
     unsigned long time;
 
-    unsigned long autonomousTime = 15000;
-    unsigned long teleopTime = 45000;
+    unsigned long autonomousTime = 5000;
+    unsigned long teleopTime = 5000;
 
 	bool isDisabled = false;
+	bool isTesting = false;
+  bool isFirstTest = true;
 
   private:
     int speedRight = 0;
@@ -46,7 +46,7 @@ class Robot {
     float newX = 0;
     float newY = 0;
     
-    unsigned long timeDifference;
+    unsigned long elapsedTime;
 };
 
 #endif

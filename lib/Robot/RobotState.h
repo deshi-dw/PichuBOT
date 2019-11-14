@@ -6,7 +6,7 @@
 #ifndef RobotState_h
 #define RobotState_h
 
-typedef enum RobotState {
+enum RobotState {
   INIT_ROBOT,
   INIT_IDLE,
   LOOP_IDLE,
@@ -14,7 +14,8 @@ typedef enum RobotState {
   LOOP_AUTONOMOUS,
   INIT_TELEOP,
   LOOP_TELEOP,
-  DISABLED
+  DISABLED,
+  TESTING
 };
 
 #endif
