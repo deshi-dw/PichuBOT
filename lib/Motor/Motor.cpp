@@ -19,21 +19,22 @@ void Motor::init() {
 }
 
 void Motor::setSpeed(int speed) {
-    if (speed == 0) return;
+    if (speed == 0) {
+        stop();
+        return;
+    }
 
     // TODO: Possibly add a "direction" to control as some motors might be reversed.
     // TODO: If motors are spinning the wrong way, switch the 1 and 0.
     if (speed > 0) {
         digitalWrite(pin1, HIGH);
         digitalWrite(pin2, LOW);
-
-        analogWrite(pinE, speed);
     } else {
         digitalWrite(pin1, LOW);
         digitalWrite(pin2, HIGH);
-
-        analogWrite(pinE, speed);
     }
+
+    analogWrite(pinE, speed);
 }
 
 void Motor::stop() {
