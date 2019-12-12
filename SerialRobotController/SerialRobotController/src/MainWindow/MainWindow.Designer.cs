@@ -34,6 +34,8 @@
 			// 
 			// hidDropdown
 			// 
+			this.hidDropdown.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
 			this.hidDropdown.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
 			this.hidDropdown.FormattingEnabled = true;
 			this.hidDropdown.Location = new System.Drawing.Point(12, 12);
@@ -43,6 +45,8 @@
 			// 
 			// portDropdown
 			// 
+			this.portDropdown.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
 			this.portDropdown.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
 			this.portDropdown.FormattingEnabled = true;
 			this.portDropdown.Location = new System.Drawing.Point(12, 39);
@@ -52,6 +56,9 @@
 			// 
 			// consoleLog
 			// 
+			this.consoleLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
 			this.consoleLog.Location = new System.Drawing.Point(12, 66);
 			this.consoleLog.Multiline = true;
 			this.consoleLog.Name = "consoleLog";
@@ -62,6 +69,7 @@
 			// 
 			// buttonStart
 			// 
+			this.buttonStart.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.buttonStart.Location = new System.Drawing.Point(240, 11);
 			this.buttonStart.Name = "buttonStart";
 			this.buttonStart.Size = new System.Drawing.Size(113, 21);
@@ -71,6 +79,7 @@
 			// 
 			// buttonRefresh
 			// 
+			this.buttonRefresh.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.buttonRefresh.Location = new System.Drawing.Point(241, 39);
 			this.buttonRefresh.Name = "buttonRefresh";
 			this.buttonRefresh.Size = new System.Drawing.Size(113, 21);
@@ -80,6 +89,8 @@
 			// 
 			// consoleInput
 			// 
+			this.consoleInput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
 			this.consoleInput.Location = new System.Drawing.Point(12, 318);
 			this.consoleInput.Name = "consoleInput";
 			this.consoleInput.Size = new System.Drawing.Size(342, 20);
@@ -87,8 +98,9 @@
 			// 
 			// baudRateInput
 			// 
+			this.baudRateInput.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.baudRateInput.Location = new System.Drawing.Point(137, 41);
-			this.baudRateInput.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+			this.baudRateInput.Margin = new System.Windows.Forms.Padding(2);
 			this.baudRateInput.Name = "baudRateInput";
 			this.baudRateInput.Size = new System.Drawing.Size(97, 20);
 			this.baudRateInput.TabIndex = 6;
@@ -105,7 +117,7 @@
 			this.Controls.Add(this.consoleLog);
 			this.Controls.Add(this.portDropdown);
 			this.Controls.Add(this.hidDropdown);
-			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
+			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
 			this.MaximizeBox = false;
 			this.MinimizeBox = false;
 			this.Name = "MainWindow";

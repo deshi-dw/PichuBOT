@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO.Ports;
 using System.Windows.Forms;
@@ -7,6 +8,10 @@ using Linearstar.Windows.RawInput;
 namespace SerialRobotController {
 	public partial class MainWindow : Form {
 		private bool isStarted = false;
+		private string currentPortName = string.Empty;
+
+		private List<string> previousCommands = new List<string>();
+		private int previousCommandIndex = 0;
 
 		private LogitechDuelAction gamepad = new LogitechDuelAction();
 
@@ -49,14 +54,14 @@ namespace SerialRobotController {
 		
 		private void OnDataRecived(int length) {
 			if (isStarted == true) {
-				PrintLine($"{(string)portDropdown.SelectedItem}>{Program.Ports.ReadLine()}");
+				PrintLine($"{currentPortName}>{Program.Ports.ReadLine()}");
 			}
 		}
 
 		private void OnExit(object sender, FormClosingEventArgs e) {
 			// Save the hid indx and port name to an ini file.
 			Program.INIFile.IniWriteValue("General", "HidIndex", $"{hidDropdown.SelectedIndex}");
-			Program.INIFile.IniWriteValue("General", "PortName", (string)portDropdown.SelectedItem);
+			Program.INIFile.IniWriteValue("General", "PortName", currentPortName);
 			Program.INIFile.IniWriteValue("General", "BaudRate", baudRateInput.Text);
 
 			Program.Ports.Disconnect();
@@ -72,9 +77,46 @@ namespace SerialRobotController {
 		}
 
 		private void OnConsoleInputKeyUp(object sender, KeyEventArgs e) {
-			if (e.KeyCode == Keys.Enter) {
-				Program.Ports.WriteLine($"{consoleInput.Text}");
-				consoleInput.Clear();
+			if (isStarted == true) {
+				if (e.KeyCode == Keys.Enter) {
+					if (consoleInput.Text.Trim() == "clear") {
+						consoleLog.Clear();
+						previousCommands.Add("clear");
+					}
+					else {
+						if (Program.Ports.WriteCommand($"{consoleInput.Text.Trim()}")) {
+							PrintLine($">{consoleInput.Text}");
+							previousCommands.Add(consoleInput.Text);
+							if (previousCommands.Count >= 20) {
+								previousCommands.RemoveAt(0);
+							}
+						}
+					}
+					consoleInput.Clear();
+				}
+				else if (e.KeyCode == Keys.Up) {
+					if (string.IsNullOrEmpty(consoleInput.Text) || string.IsNullOrWhiteSpace(consoleInput.Text)) {
+						previousCommandIndex = previousCommands.Count - 1;
+						consoleInput.Text = previousCommands[previousCommandIndex];
+					}
+					else {
+						previousCommandIndex = Math.Max(Math.Min(previousCommandIndex - 1, previousCommands.Count - 1), 0);
+						consoleInput.Text = previousCommands[previousCommandIndex];
+					}
+
+					consoleInput.SelectionStart = consoleInput.Text.Length;
+				}
+				else if (e.KeyCode == Keys.Down) {
+					if (previousCommandIndex == previousCommands.Count - 1) {
+						consoleInput.Text = string.Empty;
+					}
+					else {
+						previousCommandIndex = Math.Max(Math.Min(previousCommandIndex + 1, previousCommands.Count - 1), 0);
+						consoleInput.Text = previousCommands[previousCommandIndex];
+					}
+
+					consoleInput.SelectionStart = consoleInput.Text.Length;
+				}
 			}
 		}
 
@@ -101,13 +143,18 @@ namespace SerialRobotController {
 		}
 
 		private void OnButtonStart(object sender, EventArgs e) {
+			currentPortName = (string)portDropdown.SelectedItem;
+
 			// If the application wasn't started, start it.
 			if (isStarted == false) {
-				if (hidDropdown.SelectedIndex < 0 && Program.Ports.Connect((string)portDropdown.SelectedItem, 9600) == false) {
-					PrintLine($"Failed To start. Check that the port({portDropdown.SelectedItem}) and hid selection({hidDropdown.SelectedIndex}) is correct.");
+				if (hidDropdown.SelectedIndex < 0 && Program.Ports.Connect(currentPortName, 9600) == false) {
+					PrintLine($"Failed To start. Check that the port({currentPortName}) and hid selection({hidDropdown.SelectedIndex}) is correct.");
 
 					return;
 				}
+
+				hidDropdown.Enabled = false;
+				portDropdown.Enabled = false;
 
 				buttonRefresh.Enabled = false;
 				buttonStart.Text = "Stop";
@@ -116,6 +163,9 @@ namespace SerialRobotController {
 			}
 			// If the application was already started, stop it.
 			else {
+				hidDropdown.Enabled = true;
+				portDropdown.Enabled = true;
+
 				buttonRefresh.Enabled = true;
 				buttonStart.Text = "Start";
 
