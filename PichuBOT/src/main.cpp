@@ -1,115 +1,86 @@
 #include <Arduino.h>
 
-#include <Robot.h>
+#include <Motor.h>
+#include <Servo.h>
+#include <RobotDrive.h>
+#include <RobotClaw.h>
+
 #include <RobotClient.h>
-#include <Scheduler.h>
+#include <MsgIds.h>
 
-Scheduler scheduler;
 
-Robot bot = Robot();
-RobotClient client = RobotClient(8, 9);
-Motor rightMotor = Motor(2, 4, 3);
-Motor leftMotor = Motor(6, 7, 5);
+// Pins for the right motor.
+const byte pin_motorR1 = 1;
+const byte pin_motorR2 = 1;
+const byte pin_motorRE = 1;
 
-RobotState pre_state = INIT_ROBOT;
+// Pins for the left motor.
+const byte pin_motorL1 = 1;
+const byte pin_motorL2 = 1;
+const byte pin_motorLE = 1;
 
-void test_task() {
-    Serial.print("Task: (test_task) was executed at...");
-    Serial.println(bot.time);
-}
+// Pins for the right and left servo.
+const byte pin_servoR = 1;
+const byte pin_servoL = 1;
 
-void init_idle() {
-    Serial.println("init idle");
-}
-void loop_idle() {
-    // Serial.println("loop idle");
-    if (bot.time >= 5000) {
-        bot.state = INIT_AUTONOMOUS;
-    }
-}
+const byte pin_radioen = 7;
+const byte pin_radiose = 8;
 
-void loop_testing() {
-    // Serial.println("Testing");
-    if (bot.isFirstTest == true) {
-        client.start((byte*) "1122", (byte*) "1125");
-    }
-    client.update();
+// Initialize motors right and left.
+Motor mright = Motor(pin_motorR1, pin_motorR2, pin_motorRE);
+Motor mleft = Motor(pin_motorL1, pin_motorL2, pin_motorLE);
 
-    // Serial.println("write 3 as 255");
-    // digitalWrite(3, 255);
+// Initialize the drivetrain with pointers to motors right and left.
+RobotDrive drive = RobotDrive(&mright, &mleft);
 
-    // if (bot.time % 2000 < 1000) {
-    //     bot.driveTank(0, 255);
-    // } else {
-    //     bot.driveTank(255, 0);
-    // }
-}
+// Initialize the claw with servo pins right and left.
+RobotClaw claw = RobotClaw(pin_servoR, pin_servoL);
 
-void init_autonomous() {
-    Serial.println("init autonomous");
-    // scheduler.schedule(Task(&test_task, 5000));
-}
-void loop_autonomous() {
-    // Serial.println("loop autonomous");
-    // scheduler.update(bot.time);
-}
-
-void init_teleop() {
-    Serial.println("init teleop");
-}
-void loop_teleop() {
-    // Serial.println("loop teleop");
-}
+// Initialize the robots radio client.
+RobotClient client = RobotClient(pin_radioen, pin_radiose);
 
 void setup() {
-    /**
-	 * Byte array to float example:
-	 * byte incoming[4]={0X8A,0X23,0X48,0X42};
-	 * float velocity = *( (float*) incoming );
-	*/
-
-    bot.motorRight = rightMotor;
-    bot.motorLeft = leftMotor;
-
-    Serial.begin(9600);
-
-    bot.states[INIT_IDLE] = &init_idle;
-    bot.states[LOOP_IDLE] = &loop_idle;
-
-    bot.states[INIT_AUTONOMOUS] = &init_autonomous;
-    bot.states[LOOP_AUTONOMOUS] = &loop_autonomous;
-
-    bot.states[INIT_TELEOP] = &init_teleop;
-    bot.states[LOOP_TELEOP] = &loop_teleop;
-
-    bot.states[TESTING] = &loop_testing;
-    bot.isTesting = true;
-    bot.ready();
-
-    client.begin();
+	Serial.begin(9600);
+	client.start(115);
 }
 
 void loop() {
-    pre_state = bot.state;
-    bot.update();
+	if(client.readMsg()) {
+		switch(client.msgid) {
+		case msgid_blank:
+		break;
 
-    if (pre_state != bot.state) {
-        Serial.print("[");
-        Serial.print(bot.time);
-        Serial.print("] state:");
-        Serial.print(pre_state);
-        Serial.print(" -> ");
-        Serial.println(bot.state);
-        Serial.println();
-    }
+		case msgid_help:
+		break;
 
-    String recived = Serial.readStringUntil('\n');
+		case msgid_health:
+		break;
 
-    if(recived.length() > 0) {
-        Serial.write("Relay::");
-        Serial.write(recived.c_str());
-        Serial.write('\n');
-        Serial.flush();
+		case msgid_print:
+			client.writeMsg(msgid_ping);
+			char *strbuff;
+			client.readString(strbuff);
+			client.writeString(strbuff);
+		break;
 
-    }
+		case msgid_ping:
+		client.writeMsg(msgid_ping);
+		break;
+
+		case msgid_drive:
+			drive.arcadeDrive(client.readByte(), client.readByte());
+		break;
+
+		case msgid_tdrive:
+			drive.tankDrive(client.readByte(), client.readByte());
+		break;
+
+		case msgid_claw:
+			claw.setAngle(client.readByte());
+		break;
+
+		default:
+		break;
+	}
+	}
 }

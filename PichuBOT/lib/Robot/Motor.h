@@ -6,16 +6,17 @@
 #ifndef Motor_h
 #define Motor_h
 
+#include <Arduino.h>
+
 class Motor {
     public:
-        Motor(int _pin1, int _pin2, int _pinE);
-		void init();
-        void setSpeed(int speed);
+        Motor(byte _pin1, byte _pin2, byte _pinE);
+        void setSpeed(byte speed);
         void stop();
     private:
-        int pin1;
-        int pin2;
-        int pinE;
+        byte pin1;
+        byte pin2;
+        byte pinE;
 };
 
 #endif

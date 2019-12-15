@@ -6,19 +6,17 @@
 #include "Motor.h"
 #include <Arduino.h>
 
-Motor::Motor(int _pin1, int _pin2, int _pinE) {
+Motor::Motor(byte _pin1, byte _pin2, byte _pinE) {
     this->pin1 = _pin1;
     this->pin2 = _pin2;
     this->pinE = _pinE;
-}
 
-void Motor::init() {
-    pinMode(pin1, OUTPUT);
+	pinMode(pin1, OUTPUT);
     pinMode(pin2, OUTPUT);
     pinMode(pinE, OUTPUT);
 }
 
-void Motor::setSpeed(int speed) {
+void Motor::setSpeed(byte speed) {
     if (speed == 0) {
         stop();
         return;
