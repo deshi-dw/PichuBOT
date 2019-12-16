@@ -69,6 +69,7 @@
     <Compile Include="src\Program.cs" />
     <Compile Include="src\Hids.cs" />
     <Compile Include="src\Ports.cs" />
+    <Compile Include="src\RobotMain.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
