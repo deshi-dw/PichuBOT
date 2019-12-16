@@ -13,6 +13,8 @@ namespace SerialRobotController {
 
 		public Ports() { }
 
+		public bool IsClosing { get; private set; }
+
 		public bool Connect(string portName, int baudRate) {
 			if (port == null || (port != null && port.IsOpen == false)) {
 				try {
@@ -56,11 +58,14 @@ namespace SerialRobotController {
 
 		public void Disconnect() {
 			Clear();
+			IsClosing = true;
 
 			try {
 				port.Close();
 			}
 			catch { }
+
+			IsClosing = false;
 		}
 
 		public void Clear() {
@@ -191,25 +196,23 @@ namespace SerialRobotController {
 		}
 
 		public void WriteBlank() {
-			byte[] buffer = new byte[2];
+			byte[] buffer = new byte[1];
 			buffer[0] = (byte)RobotMain.MsgIds.Blank;
-			buffer[1] = Encoding.ASCII.GetBytes(new char[] { '\n' })[0];
+			// buffer[1] = 0;
 
 			Write(buffer);
 		}
 
 		public void WriteHelp() {
-			byte[] buffer = new byte[2];
+			byte[] buffer = new byte[1];
 			buffer[0] = (byte)RobotMain.MsgIds.Help;
-			buffer[1] = Encoding.ASCII.GetBytes(new char[] { '\n' })[0];
 
 			Write(buffer);
 		}
 
 		public void WriteHealth() {
-			byte[] buffer = new byte[2];
+			byte[] buffer = new byte[1];
 			buffer[0] = (byte)RobotMain.MsgIds.Health;
-			buffer[1] = Encoding.ASCII.GetBytes(new char[] { '\n' })[0];
 
 			Write(buffer);
 		}
@@ -217,111 +220,101 @@ namespace SerialRobotController {
 		public void WritePrint(string message) {
 
 			byte[] ascii = Encoding.ASCII.GetBytes(message);
-			byte[] buffer = new byte[2 + ascii.Length];
+			byte[] buffer = new byte[1 + ascii.Length];
 
 			for (int i = ascii.Length - 1; i >= 0; i--) {
 				buffer[i + 1] = ascii[i];
 			}
 
 			buffer[0] = (byte)RobotMain.MsgIds.Print;
-			buffer[buffer.Length-1] = Encoding.ASCII.GetBytes(new char[] { '\n' })[0];
+			buffer[buffer.Length - 1] = (byte)'\0';
 
 			Write(buffer);
 		}
 
 		public void WritePing() {
-			byte[] buffer = new byte[2];
+			byte[] buffer = new byte[1];
 			buffer[0] = (byte)RobotMain.MsgIds.Ping;
-			buffer[1] = Encoding.ASCII.GetBytes(new char[] { '\n' })[0];
 
 			Write(buffer);
 		}
 
 		public void WriteStart() {
-			byte[] buffer = new byte[2];
+			byte[] buffer = new byte[1];
 			buffer[0] = (byte)RobotMain.MsgIds.Start;
-			buffer[1] = Encoding.ASCII.GetBytes(new char[] { '\n' })[0];
 
 			Write(buffer);
 		}
 
 		public void WriteStop() {
-			byte[] buffer = new byte[2];
+			byte[] buffer = new byte[1];
 			buffer[0] = (byte)RobotMain.MsgIds.Stop;
-			buffer[1] = Encoding.ASCII.GetBytes(new char[] { '\n' })[0];
 
 			Write(buffer);
 		}
 
 		public void WriteSetChnnl(byte channel) {
-			byte[] buffer = new byte[3];
+			byte[] buffer = new byte[2];
 			buffer[0] = (byte)RobotMain.MsgIds.Setchnnl;
 			buffer[1] = channel;
-			buffer[2] = Encoding.ASCII.GetBytes(new char[] { '\n' })[0];
 
 			Write(buffer);
 		}
 
 		public void WriteSetBChnnl(byte channel) {
-			byte[] buffer = new byte[3];
+			byte[] buffer = new byte[2];
 			buffer[0] = (byte)RobotMain.MsgIds.Setbchnnl;
 			buffer[1] = channel;
-			buffer[2] = Encoding.ASCII.GetBytes(new char[] { '\n' })[0];
 
 			Write(buffer);
 		}
 
 		public void WriteDrive(byte speed, byte turn) {
-			byte[] buffer = new byte[4];
+			byte[] buffer = new byte[3];
 			buffer[0] = (byte)RobotMain.MsgIds.Drive;
 			buffer[1] = speed;
 			buffer[2] = turn;
-			buffer[3] = Encoding.ASCII.GetBytes(new char[] { '\n' })[0];
 
 			Write(buffer);
 		}
 
 		public void WriteTDrive(byte right, byte left) {
-			byte[] buffer = new byte[4];
+			byte[] buffer = new byte[3];
 			buffer[0] = (byte)RobotMain.MsgIds.TDrive;
 			buffer[1] = right;
 			buffer[2] = left;
-			buffer[3] = Encoding.ASCII.GetBytes(new char[] { '\n' })[0];
 
 			Write(buffer);
 		}
 
 		public void WriteDriveTimed(byte speed, byte turn, short time) {
-			byte[] buffer = new byte[6];
+			byte[] buffer = new byte[5];
 			buffer[0] = (byte)RobotMain.MsgIds.Drivetimed;
 			buffer[1] = speed;
 			buffer[2] = turn;
 			byte[] timeBytes = BitConverter.GetBytes(time);
 			buffer[3] = timeBytes[0];
 			buffer[4] = timeBytes[1];
-			buffer[5] = Encoding.ASCII.GetBytes(new char[] { '\n' })[0];
 
 			Write(buffer);
 		}
 
 		public void WriteTDriveTimed(byte right, byte left, short time) {
-			byte[] buffer = new byte[6];
+			byte[] buffer = new byte[5];
 			buffer[0] = (byte)RobotMain.MsgIds.TDrivetimed;
 			buffer[1] = right;
 			buffer[2] = left;
 			byte[] timeBytes = BitConverter.GetBytes(time);
 			buffer[3] = timeBytes[0];
 			buffer[4] = timeBytes[1];
-			buffer[5] = Encoding.ASCII.GetBytes(new char[] { '\n' })[0];
 
 			Write(buffer);
 		}
 
 		public void WriteClaw(byte angle) {
-			byte[] buffer = new byte[3];
+			byte[] buffer = new byte[2];
 			buffer[0] = (byte)RobotMain.MsgIds.Claw;
 			buffer[1] = angle;
-			buffer[2] = Encoding.ASCII.GetBytes(new char[] { '\n' })[0];
 
 			Write(buffer);
 		}

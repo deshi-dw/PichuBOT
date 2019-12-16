@@ -97,9 +97,9 @@ namespace SerialRobotController {
 		}
 
 		private static void TestInit() {
-
 		}
 		private static void TestLoop() {
+			Program.Ports.WriteDrive(Program.Gamepad.AxisLeft.rawY, Program.Gamepad.AxisLeft.rawY);
 		}
 
 		private static void IdleInit() { }

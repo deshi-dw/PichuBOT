@@ -15,7 +15,9 @@ namespace SerialRobotController {
 
 		public static INIFile INIFile { get; private set; }
 
-        [STAThread]
+		public static LogitechDuelAction Gamepad { get; private set; } = new LogitechDuelAction();
+
+		[STAThread]
         public static void Main (string[] args) {
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);

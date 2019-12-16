@@ -13,8 +13,6 @@ namespace SerialRobotController {
 		private List<string> previousCommands = new List<string>();
 		private int previousCommandIndex = 0;
 
-		private LogitechDuelAction gamepad = new LogitechDuelAction();
-
 		public MainWindow() {
 			InitializeComponent();
 
@@ -53,7 +51,7 @@ namespace SerialRobotController {
 		}
 		
 		private void OnDataRecived(int length) {
-			if (isStarted == true) {
+			if (isStarted == true && Program.Ports.IsClosing == false) {
 				PrintLine($"{currentPortName}>{Program.Ports.ReadLine()}");
 			}
 		}
@@ -71,8 +69,8 @@ namespace SerialRobotController {
 			if (isStarted == true && hidDropdown.SelectedIndex >= 0 && Program.Hids.ConnectedHids[hidDropdown.SelectedIndex] != null && data.Header.Type == RawInputDeviceType.Hid) {
 				RawInputHidData hid = (RawInputHidData)data;
 
-				gamepad.Update(hid.Hid.RawData);
-				PrintLine($"Left({gamepad.AxisLeft.rawX},{gamepad.AxisLeft.rawY})::Right({gamepad.AxisRight.rawX},{gamepad.AxisRight.rawY})");
+				Program.Gamepad.Update(hid.Hid.RawData);
+				PrintLine($"Left({Program.Gamepad.AxisLeft.rawX},{Program.Gamepad.AxisLeft.rawY})::Right({Program.Gamepad.AxisRight.rawX},{Program.Gamepad.AxisRight.rawY})");
 			}
 		}
 
@@ -81,6 +79,8 @@ namespace SerialRobotController {
 				if (e.KeyCode == Keys.Enter) {
 					if (consoleInput.Text.Trim() == "clear") {
 						consoleLog.Clear();
+						logBuffer = string.Empty;
+						Program.Ports.Clear();
 						previousCommands.Add("clear");
 					}
 					else {
