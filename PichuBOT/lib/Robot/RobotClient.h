@@ -25,16 +25,24 @@ class RobotClient {
 		void readString(char *buff);
 
 		void writeMsg(uint8_t id);
+		void writeByte(uint8_t data);
 		void writeString(char buff[32]);
 
-		int64_t addresses[2] = {0x00000F20, 0x00000F10};
+		void send();
+
+		void printHealth();
+		void sendHealth();
+
+		RF24 radio = RF24(7, 8);
+
+		int64_t addresses[2] = {0x00000F10, 0x00000F20};
 		uint8_t msgid;
+		char buffer[64] = {0};
+		uint8_t buffer_index = 0;
 
     private:
       byte enable_pin = 0;
       byte select_pin = 0;
-
-      RF24 radio = RF24(0, 0);
 };
 
 #endif

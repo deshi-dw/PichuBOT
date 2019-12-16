@@ -60,17 +60,32 @@ uint8_t RobotClient::readByte() {
 }
 
 void RobotClient::readString(char *data) {
-	radio.read(&data, 32);
+	radio.read(data, 32);
 }
 
 void RobotClient::writeMsg(uint8_t id) {
-	radio.stopListening();
-	radio.write(&id, sizeof(uint8_t));
-	radio.startListening();
+	memcpy(buffer+buffer_index, &id, sizeof(uint8_t));
+	buffer_index++;
 }
 
-void RobotClient::writeString(char buff[32]) {
-	radio.stopListening();
-	radio.write(buff, 32);
-	radio.startListening();
+void RobotClient::writeByte(uint8_t data) {
+	memcpy(&buffer[buffer_index], &data, sizeof(uint8_t));
+	buffer_index++;
 }
+
+void RobotClient::writeString(char *buff) {
+	memcpy(buffer+buffer_index, buff, 32);
+	buffer[buffer_index+31] = '\0';
+	buffer_index += 32;
+}
+
+void RobotClient::send() {
+	radio.stopListening();
+	radio.write(buffer, buffer_index);
+	radio.startListening();
+
+	buffer_index = 0;
+}
+
+void RobotClient::printHealth() {}
+void RobotClient::sendHealth() {}

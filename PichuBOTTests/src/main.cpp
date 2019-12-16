@@ -6,6 +6,8 @@
 
 RF24 radio(7, 8);
 
+// 0 : Set radio to reader.
+// 1 : Sets radio to sender.
 #define RADIO_NUMBER 1
 
 const int64_t addresses[2] = {0x00000F10, 0x00000F20};

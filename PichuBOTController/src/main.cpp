@@ -4,76 +4,32 @@
 #include <SPI.h>
 #include <nRF24L01.h>
 
-// arcade driving commands.
-struct cmd_drive {
+#include <MsgIds.h>
+
+typedef struct msg_drive {
+    byte id;
     byte speed;
     byte turn;
-};
-typedef struct cmd_drive cmd_drive;
-const byte cmdid_drive = 0b00100011;
+} msg_drive;
 
-struct cmd_drivetimed {
+typedef struct msg_drivetimed {
+    byte id;
     byte speed;
     byte turn;
-};
-typedef struct cmd_drivetimed cmd_drivetimed;
-const byte cmdid_drivetimed = 0b00100100;
+    uint16_t time;
+} msg_drivetimed;
 
-// tank driving commands.
-struct cmd_tdrive {
-    byte speed;
-    byte turn;
-};
-typedef struct cmd_tdrive cmd_tdrive;
-const byte cmdid_tdrive = 0b00100101;
-
-struct cmd_tdrivetimed {
-    byte speed;
-    byte turn;
-};
-typedef struct cmd_tdrivetimed cmd_tdrivetimed;
-const byte cmdid_tdrivetimed = 0b00100110;
-
-// Servo commands.
-struct cmd_claw {
+typedef struct msg_claw {
+    byte id;
     byte angle;
-};
-typedef struct cmd_claw cmd_claw;
-const byte cmdid_claw = 0b00100111;
-
-// Utility commands.
-struct cmd_print {
-    char message[31];
-};
-typedef struct cmd_print cmd_print;
-const byte cmdid_print = 0b00100000;
-
-struct cmd_ping {
-    bool result;
-};
-typedef struct cmd_ping cmd_ping;
-const byte cmdid_ping = 0b00100001;
-
-struct cmd_setbchnnl {
-    uint8_t channel;
-};
-typedef struct cmd_setbchnnl cmd_setbchnnl;
-const byte cmdid_setbchnnl = 0b00100010;
-
-// local command ids.
-const byte cmdid_blank = 0b00000000;
-const byte cmdid_help = 0b00000001;
-const byte cmdid_health = 0b00000010;
-const byte cmdid_setchnnl = 0b00000100;
-const byte cmdid_start = 0b00000101;
-const byte cmdid_stop = 0b00000110;
+} msg_claw;
 
 // radio variables.
 RF24 radio = RF24(7, 8);
 const int64_t addresses[2] = {0x00000F10, 0x00000F20};
 
 // send buffer variables.
-void *send_buffer;
+char *send_buffer;
 uint8_t send_buffer_len;
 
 uint16_t send_count;
@@ -114,7 +70,7 @@ void setup() {
 
     // start and configure radio communication.
     radio.begin();
-    radio.setChannel(115);
+    radio.setChannel(12);
     radio.setPALevel(RF24_PA_MAX);
     radio.setDataRate(RF24_250KBPS);
 
@@ -124,6 +80,7 @@ void setup() {
 
     // start listening for transmissions.
     radio.startListening();
+	send_buffer = (char*)malloc(64);
 
     Serial.println("Robot transmitter has started. Waiting for pingback...");
 }
@@ -134,74 +91,77 @@ void setup() {
 
 void loop() {
     if (Serial.available() > 0) {
-        byte serial_id = Serial.read();
+		// byte msgid = Serial.peek();
+		byte msgid = Serial.read();
 
-        switch (serial_id) {
-            case cmdid_blank:
-				Serial.println(Serial.readStringUntil('\n'));
+        switch (msgid) {
+            case msgid_blank:
+				Serial.println("invalid command.");
                 break;
 
-            case cmdid_help:
+            case msgid_help:
                 cmdfunc_help();
                 break;
 
-            case cmdid_health:
+            case msgid_health:
                 cmdfunc_health();
                 break;
 
-            case cmdid_setchnnl:
+            case msgid_setchnnl:
                 cmdfunc_setchnnl();
                 break;
 
-            case cmdid_start:
+            case msgid_start:
                 cmdfunc_start();
                 break;
 
-            case cmdid_stop:
+            case msgid_stop:
                 cmdfunc_stop();
                 break;
 
-
-            case cmdid_print:
+            case msgid_print:
                 cmdfunc_print();
                 break;
 
-            case cmdid_ping:
+            case msgid_ping:
                 cmdfunc_ping();
                 break;
 
-            case cmdid_drive:
+            case msgid_drive:
                 cmdfunc_drive();
                 break;
 
-            case cmdid_drivetimed:
+            case msgid_drivetimed:
                 cmdfunc_drivetimed();
                 break;
 
-            case cmdid_tdrive:
+            case msgid_tdrive:
                 cmdfunc_tdrive();
                 break;
 
-            case cmdid_tdrivetimed:
+            case msgid_tdrivetimed:
                 cmdfunc_tdrivetimed();
                 break;
 
-            case cmdid_claw:
+            case msgid_claw:
                 cmdfunc_claw();
                 break;
 
             default:
+				// Serial.println("invalid command.");
+				// Serial.readStringUntil('\0');
+				// Serial.read();
                 break;
         }
     }
 
-    while (radio.available() == true) {
+    if (radio.available() == true) {
         byte cmdid;
         radio.read(&cmdid, sizeof(byte));
 
         if (cmdid != 0) {
             switch (cmdid) {
-                case cmdid_print:
+                case msgid_print:
                     char printmsg[32];
                     radio.read(&printmsg, sizeof(char[32]));
                     Serial.print("robot: ");
@@ -221,16 +181,17 @@ void loop() {
 void send() {
     radio.stopListening();
 
-    if (radio.write(&send_buffer, send_buffer_len) == true) {
+    if (radio.write(send_buffer, send_buffer_len) == true) {
         send_count++;
     } else {
         failed_send_count++;
     }
 
     radio.startListening();
-}
-void read() {
-    radio.read(&read_buffer, read_buffer_len);
+
+	free(send_buffer);
+	send_buffer = (char*)malloc(64);
+	send_buffer_len = 0;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -238,31 +199,75 @@ void read() {
 /* -------------------------------------------------------------------------- */
 
 void cmdfunc_print() {
-	cmd_print print;
-	size_t len = Serial.readBytesUntil('\n', (char*)&print, 32);
-	print.message[len] = '\0';
-
-	send_buffer = &print;
+	Serial.println("sending...");
+	memcpy(send_buffer+1, Serial.readString().c_str(), 31);
+    send_buffer[0] = msgid_print;
 	send_buffer_len = 32;
-	send();
+    send();
 
-	Serial.print("sent: ");
-	Serial.println(print.message);
+    Serial.print("sent: ");
+    Serial.println(send_buffer);
+}
+
+void cmdfunc_ping() {
+	send_buffer[0] = msgid_ping;
+	send_buffer_len = 1;
+	send();
 }
 
 void cmdfunc_drive() {
-	cmd_drive drive;
-	// drive.speed = 
+    byte speed;
+    byte turn;
+
+    Serial.readBytes(&speed, sizeof(byte));
+    Serial.readBytes(&turn, sizeof(byte));
+
+    send_buffer[0] = msgid_drive;
+    send_buffer[1] = speed;
+    send_buffer[2] = turn;
+	send_buffer_len = 3;
+
+	send();
+}
+
+void cmdfunc_tdrive() {
+    byte speed;
+    byte turn;
+
+    Serial.readBytes(&speed, sizeof(byte));
+    Serial.readBytes(&turn, sizeof(byte));
+
+    send_buffer[0] = msgid_tdrive;
+    send_buffer[1] = speed;
+    send_buffer[2] = turn;
+	send_buffer_len = 3;
+
+	send();
+}
+
+void cmdfunc_drivetimed() {}
+void cmdfunc_tdrivetimed() {}
+
+void cmdfunc_claw() {
+    byte angle;
+
+    Serial.readBytes(&angle, sizeof(byte));
+
+    send_buffer[0] = msgid_claw;
+    send_buffer[1] = angle;
+	send_buffer_len = 2;
+
+	send();
 }
 
 void cmdfunc_setchnnl() {
-	uint8_t channel;
-	Serial.readBytes(&channel, sizeof(uint8_t));
+    uint8_t channel;
+    Serial.readBytes(&channel, sizeof(uint8_t));
 
-	radio.setChannel(channel);
+    radio.setChannel(channel);
 
-	Serial.print("channel set to ");
-	Serial.println(channel);
+    Serial.print("channel set to ");
+    Serial.println(channel);
 }
 
 void cmdfunc_start() {}

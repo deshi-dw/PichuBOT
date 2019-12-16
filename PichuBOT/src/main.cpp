@@ -1,13 +1,12 @@
 #include <Arduino.h>
 
 #include <Motor.h>
-#include <Servo.h>
-#include <RobotDrive.h>
 #include <RobotClaw.h>
+#include <RobotDrive.h>
+#include <Servo.h>
 
-#include <RobotClient.h>
 #include <MsgIds.h>
-
+#include <RobotClient.h>
 
 // Pins for the right motor.
 const byte pin_motorR1 = 1;
@@ -40,47 +39,69 @@ RobotClaw claw = RobotClaw(pin_servoR, pin_servoL);
 RobotClient client = RobotClient(pin_radioen, pin_radiose);
 
 void setup() {
-	Serial.begin(9600);
-	client.start(115);
+    Serial.begin(9600);
+
+    client.start(12);
+    client.connect();
+
+	Serial.println("robot has started.");
 }
 
+char teststr[32] = "Hello World!";
+
 void loop() {
-	if(client.readMsg()) {
-		switch(client.msgid) {
-		case msgid_blank:
-		break;
+    if (client.radio.available() == true) {
+		byte msgid = client.readByte();
+		Serial.println("message recived.");
+		delay(100);
 
-		case msgid_help:
-		break;
+        switch (msgid) {
+            case msgid_blank:
+                break;
 
-		case msgid_health:
-		break;
+            case msgid_help:
+                break;
 
-		case msgid_print:
-			client.writeMsg(msgid_ping);
-			char *strbuff;
-			client.readString(strbuff);
-			client.writeString(strbuff);
-		break;
+            case msgid_health:
+                break;
 
-		case msgid_ping:
-		client.writeMsg(msgid_ping);
-		break;
+            case msgid_print:
+                char *strbuff;
+                client.readString(strbuff);
 
-		case msgid_drive:
-			drive.arcadeDrive(client.readByte(), client.readByte());
-		break;
+                client.writeByte(msgid_print);
+                client.writeString(strbuff);
 
-		case msgid_tdrive:
-			drive.tankDrive(client.readByte(), client.readByte());
-		break;
+				Serial.println(strbuff);
+                client.send();
+                break;
 
-		case msgid_claw:
-			claw.setAngle(client.readByte());
-		break;
+            case msgid_ping:
+                client.writeMsg(msgid_ping);
+                client.send();
+                break;
 
-		default:
-		break;
+            case msgid_drive:
+                drive.arcadeDrive(client.readByte(), client.readByte());
+                break;
+
+            case msgid_tdrive:
+                drive.tankDrive(client.readByte(), client.readByte());
+                break;
+
+            case msgid_claw:
+                claw.setAngle(client.readByte());
+                break;
+
+            default:
+                break;
+        }
+    }
+	else {
+		// Serial.println("waiting for data...");
 	}
-	}
+
+	// client.writeByte(msgid_print);
+	// client.writeString(teststr);
+	// client.send();
 }
