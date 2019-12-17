@@ -17,17 +17,19 @@ Motor::Motor(byte _pin1, byte _pin2, byte _pinE) {
 }
 
 void Motor::setSpeed(byte speed) {
-    if (speed == 0) {
+    if (speed == 127) {
         stop();
         return;
     }
 
     // TODO: Possibly add a "direction" to control as some motors might be reversed.
     // TODO: If motors are spinning the wrong way, switch the 1 and 0.
-    if (speed > 0) {
+    if (speed > 127) {
+		speed = (speed - 127) * 2;
         digitalWrite(pin1, HIGH);
         digitalWrite(pin2, LOW);
     } else {
+		speed = (127 - speed) * 2;
         digitalWrite(pin1, LOW);
         digitalWrite(pin2, HIGH);
     }

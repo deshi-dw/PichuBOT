@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -44,20 +45,28 @@ namespace SerialRobotController {
 		public static bool IsRunning { get; set; }
 		public static RobotState State { get; set; }
 
+		private static Stopwatch stopwatch = new Stopwatch();
+
 		public static void Start() {
+			stopwatch.Start();
 			LoopThread = new Thread(MainLoop);
 
 			IsRunning = true;
-			State = RobotState.TestInit;
+			State = RobotState.Disabled;
 
 			LoopThread.Start();
 		}
 		public static void Stop() {
 			IsRunning = false;
+			stopwatch.Stop();
+			stopwatch.Reset();
 		}
 
 		private static void MainLoop() {
 			while (IsRunning == true) {
+				while (stopwatch.ElapsedMilliseconds < 50 && IsRunning) ;
+				stopwatch.Restart();
+
 				switch (State) {
 					case RobotState.TestInit:
 						TestInit();
@@ -99,10 +108,13 @@ namespace SerialRobotController {
 		private static void TestInit() {
 		}
 		private static void TestLoop() {
-			Program.Ports.WriteDrive(Program.Gamepad.AxisLeft.rawY, Program.Gamepad.AxisLeft.rawY);
+			Program.Ports.WriteDrive(Math.Max(Math.Min(Program.Gamepad.AxisLeft.rawY, (byte)254), (byte)1), Math.Max(Math.Min(Program.Gamepad.AxisLeft.rawX, (byte)254), (byte)1));
+			Program.MainWindow.PrintLine($"x: {Program.Gamepad.AxisLeft.rawX} y: {Program.Gamepad.AxisLeft.rawY}");
 		}
 
-		private static void IdleInit() { }
+		private static void IdleInit() {
+			Program.Ports.WriteDrive(Math.Max(Math.Min(Program.Gamepad.AxisLeft.rawY, (byte)254), (byte)1), Math.Max(Math.Min(Program.Gamepad.AxisLeft.rawX, (byte)254), (byte)1));
+		}
 		private static void IdleLoop() { }
 
 		private static void AutonomousInit() { }

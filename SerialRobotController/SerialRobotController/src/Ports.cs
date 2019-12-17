@@ -23,9 +23,7 @@ namespace SerialRobotController {
 					port.DataReceived += OnDataRecived;
 					port.Open();
 
-					// Write a message to the robot saying that it is now connected to the computer.
-					byte[] connectMessage = Encoding.ASCII.GetBytes($"Connected to the port {portName}.");
-					port.Write(connectMessage, 0, connectMessage.Length);
+					Program.MainWindow.PrintLine($"Connected to the port {portName} with a baud rate of {baudRate}.");
 				}
 				catch {
 					// If creating or opening the port fails, return false.
@@ -142,14 +140,44 @@ namespace SerialRobotController {
 				case "health":
 					WriteHealth();
 					break;
+				case "start_test":
+					if (RobotMain.IsRunning == false) {
+						RobotMain.Start();
+					}
+					RobotMain.State = RobotMain.RobotState.TestInit;
+					break;
+				case "start_idle":
+					if (RobotMain.IsRunning == false) {
+						RobotMain.Start();
+					}
+					RobotMain.State = RobotMain.RobotState.IdleInit;
+					break;
+				case "start_autonomous":
+					if (RobotMain.IsRunning == false) {
+						RobotMain.Start();
+					}
+					RobotMain.State = RobotMain.RobotState.AutonomousInit;
+					break;
+				case "start_teleop":
+					if (RobotMain.IsRunning == false) {
+						RobotMain.Start();
+					}
+					RobotMain.State = RobotMain.RobotState.TeleopInit;
+					break;
 				case "setchnnl":
 					WriteSetChnnl(Convert.ToByte(argStrings[0]));
 					break;
 				case "start":
 					WriteStart();
+					if (RobotMain.IsRunning == false) {
+						RobotMain.Start();
+					}
 					break;
 				case "stop":
 					WriteStop();
+					if (RobotMain.IsRunning == true) {
+						RobotMain.Stop();
+					}
 					break;
 
 				case "print":
@@ -272,8 +300,8 @@ namespace SerialRobotController {
 		public void WriteDrive(byte speed, byte turn) {
 			byte[] buffer = new byte[3];
 			buffer[0] = (byte)RobotMain.MsgIds.Drive;
-			buffer[1] = speed;
-			buffer[2] = turn;
+			buffer[1] = (byte)speed;
+			buffer[2] = (byte)turn;
 
 			Write(buffer);
 		}
@@ -281,8 +309,10 @@ namespace SerialRobotController {
 		public void WriteTDrive(byte right, byte left) {
 			byte[] buffer = new byte[3];
 			buffer[0] = (byte)RobotMain.MsgIds.TDrive;
-			buffer[1] = right;
-			buffer[2] = left;
+			buffer[1] = (byte)right;
+			buffer[2] = (byte)left;
+
+			Program.MainWindow.PrintLine($">>>>>drive({buffer[1]},{buffer[2]})");
 
 			Write(buffer);
 		}
@@ -290,8 +320,8 @@ namespace SerialRobotController {
 		public void WriteDriveTimed(byte speed, byte turn, short time) {
 			byte[] buffer = new byte[5];
 			buffer[0] = (byte)RobotMain.MsgIds.Drivetimed;
-			buffer[1] = speed;
-			buffer[2] = turn;
+			buffer[1] = (byte)speed;
+			buffer[2] = (byte)turn;
 			byte[] timeBytes = BitConverter.GetBytes(time);
 			buffer[3] = timeBytes[0];
 			buffer[4] = timeBytes[1];
@@ -302,8 +332,8 @@ namespace SerialRobotController {
 		public void WriteTDriveTimed(byte right, byte left, short time) {
 			byte[] buffer = new byte[5];
 			buffer[0] = (byte)RobotMain.MsgIds.TDrivetimed;
-			buffer[1] = right;
-			buffer[2] = left;
+			buffer[1] = (byte)right;
+			buffer[2] = (byte)left;
 			byte[] timeBytes = BitConverter.GetBytes(time);
 			buffer[3] = timeBytes[0];
 			buffer[4] = timeBytes[1];
@@ -314,7 +344,7 @@ namespace SerialRobotController {
 		public void WriteClaw(byte angle) {
 			byte[] buffer = new byte[2];
 			buffer[0] = (byte)RobotMain.MsgIds.Claw;
-			buffer[1] = angle;
+			buffer[1] = (byte)angle;
 
 			Write(buffer);
 		}

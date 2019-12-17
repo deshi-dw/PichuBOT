@@ -5,6 +5,7 @@
 
 #include "RobotDrive.h"
 #include "Arduino.h"
+#include "Math.h"
 
 RobotDrive::RobotDrive(Motor *mright, Motor *mleft) {
     this->mright = mright;
@@ -12,9 +13,11 @@ RobotDrive::RobotDrive(Motor *mright, Motor *mleft) {
 }
 
 void RobotDrive::arcadeDrive(byte speed, byte turn) {
-    float turnmult = (turn - 128) * 2 / 255;
+	float y = (speed-127)/127.0f;
+	float x = (turn-127)/127.0f;
 
-	tankDrive(speed * -turnmult, speed * turnmult);
+	float right = (y + x)/(2 - abs(abs(y) - abs(x)));
+	float left = (y - x)/(2 - abs(abs(y) - abs(x)));
 }
 
 void RobotDrive::tankDrive(byte right, byte left) {

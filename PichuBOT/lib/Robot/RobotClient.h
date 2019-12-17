@@ -20,15 +20,9 @@ class RobotClient {
 		void connect();
 		void disconnect();
 		
-		bool readMsg();
-		uint8_t readByte();
-		void readString(char *buff);
-
-		void writeMsg(uint8_t id);
-		void writeByte(uint8_t data);
-		void writeString(char buff[32]);
-
-		void send();
+		bool avaliable();
+		void read(uint8_t size);
+		void write(uint8_t size);
 
 		void printHealth();
 		void sendHealth();
@@ -36,13 +30,15 @@ class RobotClient {
 		RF24 radio = RF24(7, 8);
 
 		int64_t addresses[2] = {0x00000F10, 0x00000F20};
-		uint8_t msgid;
-		char buffer[64] = {0};
-		uint8_t buffer_index = 0;
+		char *writebuff;
+		char *readbuff;
 
     private:
       byte enable_pin = 0;
       byte select_pin = 0;
+
+	  uint16_t send_count = 0;
+	  uint16_t failed_send_count = 0;
 };
 
 #endif

@@ -8,17 +8,20 @@
 #include "RobotClaw.h"
 
 RobotClaw::RobotClaw(byte pin_right, byte pin_left) {
-	sright.attach(pin_right);
-	sleft.attach(pin_left);
+	sright.attach(pin_right, 0, 2400);
+	// sleft.attach(pin_left);
 }
 void RobotClaw::setAngle(byte angle) {
-	sright.write(angle);
-	sleft.write(angle - 90);
+	Serial.print("claw:");
+	Serial.println(angle);
+	// sright.write(angle);
+	sright.write(angle); 
+	// sleft.write(angle - 90);
 }
 byte RobotClaw::getAngle() {
 	return (sright.read() + sleft.read()) / 2;
 }
 void RobotClaw::reset() {
 	sright.write(0);
-	sleft.write(0);
+	// sleft.write(0);
 }

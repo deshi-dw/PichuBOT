@@ -9,21 +9,21 @@
 #include <RobotClient.h>
 
 // Pins for the right motor.
-const byte pin_motorR1 = 1;
-const byte pin_motorR2 = 1;
-const byte pin_motorRE = 1;
+const byte pin_motorR1 = 2;
+const byte pin_motorR2 = 4;
+const byte pin_motorRE = 3;
 
 // Pins for the left motor.
-const byte pin_motorL1 = 1;
-const byte pin_motorL2 = 1;
-const byte pin_motorLE = 1;
+const byte pin_motorL1 = 6;
+const byte pin_motorL2 = 7;
+const byte pin_motorLE = 5;
 
 // Pins for the right and left servo.
-const byte pin_servoR = 1;
+const byte pin_servoR = 10;
 const byte pin_servoL = 1;
 
-const byte pin_radioen = 7;
-const byte pin_radiose = 8;
+const byte pin_radioen = 8;
+const byte pin_radiose = 9;
 
 // Initialize motors right and left.
 Motor mright = Motor(pin_motorR1, pin_motorR2, pin_motorRE);
@@ -47,13 +47,13 @@ void setup() {
 	Serial.println("robot has started.");
 }
 
-char teststr[32] = "Hello World!";
-
 void loop() {
     if (client.radio.available() == true) {
-		byte msgid = client.readByte();
-		Serial.println("message recived.");
-		delay(100);
+		client.read(1);
+		byte msgid = client.readbuff[0];
+		// Serial.println("message recived.");
+
+		while(client.radio.available() == false);
 
         switch (msgid) {
             case msgid_blank:
@@ -63,34 +63,38 @@ void loop() {
                 break;
 
             case msgid_health:
+				client.printHealth();
                 break;
 
             case msgid_print:
-                char *strbuff;
-                client.readString(strbuff);
+                client.read(32);
 
-                client.writeByte(msgid_print);
-                client.writeString(strbuff);
+                client.writebuff[0] = msgid_print;
+                memcpy(client.writebuff+1, client.readbuff, 31);
+				client.writebuff[31] = '\0';
+                client.write(32);
 
-				Serial.println(strbuff);
-                client.send();
+				Serial.println(client.writebuff);
                 break;
 
             case msgid_ping:
-                client.writeMsg(msgid_ping);
-                client.send();
+                client.writebuff[0] = msgid_ping;
+                client.write(1);
                 break;
 
             case msgid_drive:
-                drive.arcadeDrive(client.readByte(), client.readByte());
+				client.read(2);
+                drive.arcadeDrive(client.readbuff[0], client.readbuff[1]);
                 break;
 
             case msgid_tdrive:
-                drive.tankDrive(client.readByte(), client.readByte());
+				client.read(2);
+                drive.tankDrive(client.readbuff[0], client.readbuff[1]);
                 break;
 
             case msgid_claw:
-                claw.setAngle(client.readByte());
+				client.read(1);
+                claw.setAngle(client.readbuff[0]);
                 break;
 
             default:
@@ -101,7 +105,16 @@ void loop() {
 		// Serial.println("waiting for data...");
 	}
 
+	// drive.arcadeDrive(125, 127);
+	// delay(1000);
+	// drive.arcadeDrive(0, 20);
+	// delay(1000);
+	// drive.arcadeDrive(0, 147);
+	// delay(1000);
+
 	// client.writeByte(msgid_print);
 	// client.writeString(teststr);
 	// client.send();
+
+	// claw.setAngle(90);
 }

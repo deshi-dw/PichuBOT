@@ -70,7 +70,7 @@ namespace SerialRobotController {
 				RawInputHidData hid = (RawInputHidData)data;
 
 				Program.Gamepad.Update(hid.Hid.RawData);
-				PrintLine($"Left({Program.Gamepad.AxisLeft.rawX},{Program.Gamepad.AxisLeft.rawY})::Right({Program.Gamepad.AxisRight.rawX},{Program.Gamepad.AxisRight.rawY})");
+				// PrintLine($"Left({Program.Gamepad.AxisLeft.rawX},{Program.Gamepad.AxisLeft.rawY})::Right({Program.Gamepad.AxisRight.rawX},{Program.Gamepad.AxisRight.rawY})");
 			}
 		}
 
@@ -147,7 +147,7 @@ namespace SerialRobotController {
 
 			// If the application wasn't started, start it.
 			if (isStarted == false) {
-				if (hidDropdown.SelectedIndex < 0 && Program.Ports.Connect(currentPortName, 9600) == false) {
+				if (hidDropdown.SelectedIndex < 0 || Program.Ports.Connect(currentPortName, Convert.ToInt32(baudRateInput.Text)) == false) {
 					PrintLine($"Failed To start. Check that the port({currentPortName}) and hid selection({hidDropdown.SelectedIndex}) is correct.");
 
 					return;
@@ -155,6 +155,7 @@ namespace SerialRobotController {
 
 				hidDropdown.Enabled = false;
 				portDropdown.Enabled = false;
+				baudRateInput.Enabled = false;
 
 				buttonRefresh.Enabled = false;
 				buttonStart.Text = "Stop";
@@ -165,6 +166,7 @@ namespace SerialRobotController {
 			else {
 				hidDropdown.Enabled = true;
 				portDropdown.Enabled = true;
+				baudRateInput.Enabled = true;
 
 				buttonRefresh.Enabled = true;
 				buttonStart.Text = "Start";

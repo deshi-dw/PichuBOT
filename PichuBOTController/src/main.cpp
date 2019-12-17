@@ -25,12 +25,11 @@ typedef struct msg_claw {
 } msg_claw;
 
 // radio variables.
-RF24 radio = RF24(7, 8);
+RF24 radio = RF24(9, 10);
 const int64_t addresses[2] = {0x00000F10, 0x00000F20};
 
 // send buffer variables.
 char *send_buffer;
-uint8_t send_buffer_len;
 
 uint16_t send_count;
 uint16_t failed_send_count;
@@ -57,8 +56,8 @@ void cmdfunc_claw();
 // parsing functions.
 
 // radio functions.
-void read();
-void write();
+void send();
+void send_msgid(uint8_t id);
 
 /* -------------------------------------------------------------------------- */
 /*                                    setup                                   */
@@ -105,6 +104,7 @@ void loop() {
 
             case msgid_health:
                 cmdfunc_health();
+				send_msgid(msgid_health);
                 break;
 
             case msgid_setchnnl:
@@ -178,10 +178,9 @@ void loop() {
 /*                               radio functions                              */
 /* -------------------------------------------------------------------------- */
 
-void send() {
+void send(uint8_t size) {
     radio.stopListening();
-
-    if (radio.write(send_buffer, send_buffer_len) == true) {
+    if (radio.write(send_buffer, size) == true) {
         send_count++;
     } else {
         failed_send_count++;
@@ -189,9 +188,14 @@ void send() {
 
     radio.startListening();
 
-	free(send_buffer);
-	send_buffer = (char*)malloc(64);
-	send_buffer_len = 0;
+	// free(send_buffer);
+	// send_buffer = (char*)malloc(64);
+}
+
+void send_msgid(uint8_t id) {
+	send_buffer[0] = id;
+
+	send(1);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -200,64 +204,51 @@ void send() {
 
 void cmdfunc_print() {
 	Serial.println("sending...");
-	memcpy(send_buffer+1, Serial.readString().c_str(), 31);
-    send_buffer[0] = msgid_print;
-	send_buffer_len = 32;
-    send();
+	send_msgid(msgid_print);
+	memcpy(send_buffer, Serial.readString().c_str(), 31);
+    send(32);
 
     Serial.print("sent: ");
     Serial.println(send_buffer);
 }
 
 void cmdfunc_ping() {
-	send_buffer[0] = msgid_ping;
-	send_buffer_len = 1;
-	send();
+	send_msgid(msgid_ping);
 }
 
 void cmdfunc_drive() {
-    byte speed;
-    byte turn;
+    send_msgid(msgid_drive);
 
-    Serial.readBytes(&speed, sizeof(byte));
-    Serial.readBytes(&turn, sizeof(byte));
+	send_buffer[0] = Serial.read();
+	send_buffer[1] = Serial.read();
 
-    send_buffer[0] = msgid_drive;
-    send_buffer[1] = speed;
-    send_buffer[2] = turn;
-	send_buffer_len = 3;
-
-	send();
+	send(2);
 }
 
 void cmdfunc_tdrive() {
-    byte speed;
-    byte turn;
+    send_msgid(msgid_tdrive);
 
-    Serial.readBytes(&speed, sizeof(byte));
-    Serial.readBytes(&turn, sizeof(byte));
+	send_buffer[0] = Serial.read();
+	send_buffer[1] = Serial.read();
 
-    send_buffer[0] = msgid_tdrive;
-    send_buffer[1] = speed;
-    send_buffer[2] = turn;
-	send_buffer_len = 3;
+	Serial.print("drive(");
+	Serial.print((byte)send_buffer[0]);
+	Serial.print(",");
+	Serial.print((byte)send_buffer[1]);
+	Serial.println(")");
 
-	send();
+	send(2);
 }
 
 void cmdfunc_drivetimed() {}
 void cmdfunc_tdrivetimed() {}
 
 void cmdfunc_claw() {
-    byte angle;
+    send_msgid(msgid_claw);
 
-    Serial.readBytes(&angle, sizeof(byte));
+	send_buffer[0] = Serial.read();
 
-    send_buffer[0] = msgid_claw;
-    send_buffer[1] = angle;
-	send_buffer_len = 2;
-
-	send();
+	send(1);
 }
 
 void cmdfunc_setchnnl() {
